@@ -1,2 +1,5 @@
 # TimeSeriesDataAnalysis
 Part of the studies of Spatial and Temporal Data Granularity Analysis in the Internet of Things
+
+Abstract:
+The Internet of Things consists of ``things'' made up of small sensors and actuators capable of interacting with the environment. The combination of devices with sensor networks and Internet access enables communication between the physical world and cyber space, providing the development of solutions to many real world problems. However, most of the existing applications are dedicated to solving a specific problem using only private sensor networks, which limits the actual capacity of the Internet of things. In addition, these applications do not worry about the quality of service offered by the sensor network or the sensors that compose them and can collect a large amount of inaccurate or irrelevant data, which can cause significant harm to companies. In this context, this proposal aims to develop a metaheuristic-based solution to precise analyses of the quality of data and the infrastructure for IoT environments.
