@@ -32,6 +32,14 @@ class Agregation:
 		newDataset = self.initialize(dataset)
 		self.dataset = self.dataset.append(newDataset)
 
+	# to split data set per season
+	def seasonFilter(self, df):	
+		spring = df[(df['Date Local'] >= '2019-03-01') & (df['Date Local'] <= '2019-05-31')]
+		summer = df[(df['Date Local'] >= '2019-06-01') & (df['Date Local'] <= '2019-08-31')]
+		fall = df[(df['Date Local'] >= '2019-09-01') & (df['Date Local'] <= '2019-11-30')]
+		winter = df[(df['Date Local'] >= '2019-12-01')]# & (df['Date Local'] <= '2019-02-28')]
+		winter = winter.append(df[(df['Date Local'] <= '2019-02-28')])
+
 
 	# plot data in a simple time series description
 	def plotTimeSeries(self):
