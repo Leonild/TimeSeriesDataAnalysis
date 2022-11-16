@@ -3,18 +3,29 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.seasonal import seasonal_decompose
+# functions for the autocorrelation calc and partial autocorrelation calc
+import statsmodels.api as sm
+#to work shloud to use pip3 install statsmodels==0.13.0
+# ignore not crucial warnings
+import warnings
+warnings.filterwarnings("ignore")
 from matplotlib import pyplot
-
 from datetime import datetime
 from math import sin, cos, sqrt, atan2, radians
+from pandas.plotting import lag_plot
 
 
 class Agregation:
 
 	def __init__(self):
 		#self.dataset = self.initialize(dataset)
-		self.dataset = pd.DataFrame(columns = ["Date", "DAILY_AQI_VALUE", "SITE_LATITUDE","SITE_LONGITUDE"])
-		
+		self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
+
+	# add others datasets
+	def appendDataset(self, dataset):
+		newDataset = self.initialize(dataset)
+		self.dataset = self.dataset.append(newDataset)
+		self.dataset = self.dataset.sort_index()
 
 	# initialize the dataset by removing the undesire columns, assigning date to index, and grouping by month (commented)
 	def initialize(self, dataset):
@@ -24,32 +35,31 @@ class Agregation:
 		# Convert the date to datetime64
 		dataset['Date'] = pd.to_datetime(dataset['Date'], format='%m/%d/%Y')
 		dataset.index = dataset['Date'] # to work the next line
+		#grouping by month
 		dataset = dataset.groupby(pd.Grouper(freq='M')).mean() #grouping data by month
+		dataset = dataset.rename(columns={"Date": "Date", "DAILY_AQI_VALUE": "AQI", "SITE_LATITUDE": "latitude", "SITE_LONGITUDE": "longitude"})
 		return dataset
 
-	# add others datasets
-	def appendDataset(self, dataset):
-		newDataset = self.initialize(dataset)
-		self.dataset = self.dataset.append(newDataset)
-
-	# to split data set per season
-	def seasonFilter(self, df):	
-		spring = df[(df['Date Local'] >= '2019-03-01') & (df['Date Local'] <= '2019-05-31')]
-		summer = df[(df['Date Local'] >= '2019-06-01') & (df['Date Local'] <= '2019-08-31')]
-		fall = df[(df['Date Local'] >= '2019-09-01') & (df['Date Local'] <= '2019-11-30')]
-		winter = df[(df['Date Local'] >= '2019-12-01')]# & (df['Date Local'] <= '2019-02-28')]
-		winter = winter.append(df[(df['Date Local'] <= '2019-02-28')])
-
+	#correlogram: autocorrelation representation
+	def correlogram(self):
+		#returns ndarray with a partial autocorrelations for lags 0, 1, …, nlags. Shape (nlags+1,) | ols : regression of time series on lags of it and on constant
+		correlation = sm.tsa.stattools.pacf_ols(self.dataset['AQI'])
+		#lag_plot(correlation)#.imshow()
+		title = 'Autocorrelation: AQI'
+		lags = 10
+		#plot_acf(correlation,title=title,lags=lags)
+		sm.graphics.tsa.plot_pacf(correlation,title=title,lags=lags)
+		plt.show()
 
 	# plot data in a simple time series description
 	def plotTimeSeries(self):
 		self.dataset = self.dataset.sort_index()
 		plt.rc('font', size=10)
 		#moving average by month
-		self.dataset['Moving-Average'] = self.dataset['DAILY_AQI_VALUE'].rolling(window=12).median()
+		self.dataset['Moving-Average'] = self.dataset['AQI'].rolling(window=12).median()
 		#self.dataset[['DAILY_AQI_VALUE','Moving-Average']].plot(figsize=(12,9))
 
-		plt.plot(self.dataset.index,self.dataset['DAILY_AQI_VALUE'],label="Ozone",color="red") # Plota os dados
+		plt.plot(self.dataset.index,self.dataset['AQI'],label="Ozone",color="red") # Plota os dados
 		plt.plot(self.dataset.index,self.dataset['Moving-Average'],label="Moving Average",color="blue") # Plota os dados
 		plt.title('Ozone Polution')
 		plt.xlabel("Date")
@@ -59,19 +69,25 @@ class Agregation:
 		#plt.savefig("./"+graphName)
 		plt.clf()
 
-	# Plot a seasonal decompose
-	def seasonalDecompose(self):
-		self.dataset = self.dataset.sort_index()
-		pollutant = np.array(self.dataset['DAILY_AQI_VALUE'])
-
-		result = seasonal_decompose(pollutant, model='additive', period=12)
-		result.plot()
-
-		pyplot.show()
-
 	#salve the dataframe into a csv
 	def saveData(self, file_name):
 		self.dataset.to_csv(file_name, index=False)
+
+	# Plot a seasonal decompose
+	def seasonalDecompose(self):
+		self.dataset = self.dataset.sort_index()
+		pollutant = np.array(self.dataset['AQI'])
+		result = seasonal_decompose(pollutant, model='additive', period=12)
+		result.plot()
+		pyplot.show()
+
+	# to split data set per season
+	def seasonFilter(self, df):	
+		spring = df[(df['Date'] >= '2019-03-01') & (df['Date'] <= '2019-05-31')]
+		summer = df[(df['Date'] >= '2019-06-01') & (df['Date'] <= '2019-08-31')]
+		fall = df[(df['Date'] >= '2019-09-01') & (df['Date'] <= '2019-11-30')]
+		winter = df[(df['Date'] >= '2019-12-01')]# & (df['Date'] <= '2019-02-28')]
+		winter = winter.append(df[(df['Date'] <= '2019-02-28')])
 
 if __name__ == "__main__":
 	
@@ -85,6 +101,7 @@ if __name__ == "__main__":
 		dataSet = pd.read_csv(readPath) #O3
 		a.appendDataset(dataSet)
 
-	a.seasonalDecompose()
+	#a.seasonalDecompose()
 	#a.plotTimeSeries()
+	a.correlogram()
 

@@ -21,23 +21,7 @@ import sys
 class Agregation:
 
 	def __init__(self, dataset):
-		# self.dataset = dataset
-		#removendo colunas indesejaveis
-		# self.dataset = self.dataset.drop(['Index','StateCode','CountyCode','SiteNum','NO2Units','O3Units','SO2Units','COUnits'],axis=1)
-		#filtrando pelo ano desejado
-		# self.dataset = self.dataset[self.dataset['DateLocal'].str.contains("2011")]
-
-		#Filtrando pelo estado de enteresse
-		#dataset = dataset[dataset['State Name'].str.contains("California")]
-
-		#dataset = dataset.drop(["State Code","County Code","Site Num","Parameter Code","POC","Datum","Parameter Name","Sample Duration","Pollutant Standard","Date Local","Units of Measure","Event Type","Observation Count","Observation Percent","Arithmetic Mean","1st Max Value","1st Max Hour","Method Code","Method Name","Local Site Name","Address","State Name","County Name","City Name","CBSA Name","Date of Last Change"],axis=1)
-		#dataset = dataset.replace(0, np.nan) #substituindo 0 com NaN
-		#dataset = dataset.dropna() # eliminando valores Nulos
-		#grouped = dataset.groupby(["Latitude","Longitude"]).mean()#count()[['DateLocal']]  # testendo a funcao contar
-		# grouped.to_csv('coletas-poluentes.csv')
-		#self.dataset = grouped.reset_index()
 		self.dataset = dataset
-		print(self.dataset)
 
 	#fill w field, identify what data belongs to the specific polygon
 	def geopointWithinShape(self, grid):
@@ -68,7 +52,7 @@ class Agregation:
 						# Appending a row to csv with missing entries
 						#row_contents = pd.DataFrame({'w': [i], 'Address': ['0'], 'DateLocalCount': 0.0, 'longitude': 0.0, 'latitude': 0.0,
 						#'NO2AQI': 0.0, 'O3AQI': 0.0, 'SO2AQI': 0.0, 'COAQI': 0.0})
-						row_contents = pd.DataFrame({'w': [i], 'latitude': np.nan, 'longitude': np.nan,'AQI': np.nan})
+						row_contents = pd.DataFrame({'w': [i], 'Date': np.nan,'AQI': np.nan, 'latitude': np.nan, 'longitude': np.nan})
 						cities = cities.append(row_contents, ignore_index=True)
 						aux = aux.append(row_contents)
 						print("Adicionou a linha ", i)
