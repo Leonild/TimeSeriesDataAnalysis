@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.seasonal import seasonal_decompose
 # functions for the autocorrelation calc and partial autocorrelation calc
 import statsmodels.api as sm
-#to work shloud to use pip3 install statsmodels==0.13.0
 # ignore not crucial warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -15,6 +14,9 @@ from math import sin, cos, sqrt, atan2, radians
 from pandas.plotting import lag_plot
 from pmdarima import auto_arima # to determinate ARIMA order
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.statespace.tools import diff
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 
 class Agregation:
@@ -23,7 +25,8 @@ class Agregation:
 		#self.dataset = self.initialize(dataset)
 		self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
 
-	def arima(self):
+	# ARMA (autoregression analysis and moving average)
+	def arma(self):
 		# Dickey-Fuller test to confirm stationarity
 		# fonte: https://machinelearningmastery.com/time-series-data-stationary-python/
 		result = sm.tsa.stattools.adfuller(self.dataset['AQI'], autolag='AIC')
@@ -55,7 +58,7 @@ class Agregation:
 		start=len(trainning)
 		end=len(trainning)+len(test)-1
 		prediction = result.predict(start=start, end=end).rename('Prediction ARMA(1,1)')
-		title = 'AQI ARIMA prediction'
+		title = 'AQI ARMA prediction'
 		ylabel='AQI'
 		xlabel='' # we don't really need a label here
 
@@ -65,7 +68,50 @@ class Agregation:
 		ax.set(xlabel=xlabel, ylabel=ylabel)
 		plt.show()
 
+	# autoregressive integrated moving average (ARIMA)
+	def arima(self):
+		result = adfuller(diff(self.dataset['AQI']), autolag='AIC')
+		print('ADF Statistic: %f' % result[0])
+		print('p-value: %f' % result[1])
+		print('Critical Values:')
+		for key, value in result[4].items():
+			print('\t%s: %.3f' % (key, value))
 
+		title = 'Autocorrelation: AQI'
+		lags = 40
+		sm.graphics.tsa.plot_acf(self.dataset['AQI'],title=title,lags=lags);
+		sm.graphics.tsa.plot_pacf(self.dataset['AQI'],title=title,lags=lags);
+		#plt.show()
+		plt.clf()
+		# checking with pmdarima.auto_arima by stepwise_fit to se if p and q still make sense
+		stepwise_fit = auto_arima(self.dataset['AQI'], start_p=0, start_q=0,
+                          max_p=3, max_q=3, m=0,
+                          seasonal=False,
+                          d=None, trace=True,
+                          error_action='ignore',   # we don't want to know if an order does not work
+                          suppress_warnings=True,  # we don't want convergence warnings
+                          stepwise=True)           # set to stepwise
+
+		stepwise_fit.summary()
+
+		# evaluating the ARIMA (0,1,0) model in trainning and test bases
+		division = len(self.dataset)
+		trainning = self.dataset[:int(division*0.8)]
+		test = self.dataset[int(division*0.8):]
+		model = ARIMA(trainning['AQI'],order=(0,1,0))
+		result = model.fit()
+		result.summary()
+
+		# seen prediction
+		start=len(trainning)
+		end=len(trainning)+len(test)-1
+		# dynamic = false means that all point will be build by historic until this point (all values lagged)
+		prediction = result.predict(start=start,end = end, dynamic=False, typ='levels').rename('Prediction ARIMA(0,1,0)')
+		# type = levels means that the prediction will be no linear (original endogenous)
+		trainning['AQI'].plot(legend=True, label='Trainning')
+		test['AQI'].plot(legend=True, label='Test')
+		prediction.plot(legend=True, figsize=(8,6))
+		plt.show()
 
 	# add others datasets
 	def appendDataset(self, dataset):
@@ -115,6 +161,41 @@ class Agregation:
 		#plt.savefig("./"+graphName)
 		plt.clf()
 
+	#Arima with seasonality
+	def sarima(self):
+		np.random.seed(0) 
+
+		# fiting the SARIMA model
+		#auto_arima(self.dataset['AQI'],seasonal=True,m=7).summary()
+
+
+		#stepwise_fit = auto_arima(self.dataset['AQI'], start_p=0, start_q=0,
+		#						max_p=6, max_q=3, m=7,
+		#						seasonal=True,
+		#						trace=True,
+		#						error_action='ignore',   
+		#						suppress_warnings=True,  
+		#						stepwise=True)           
+
+		#stepwise_fit.summary() #Best model was:  ARIMA(6,0,1)(0,0,1)[7] intercept
+		# seen prediction
+		division = len(self.dataset)
+		trainning = self.dataset[:int(division*0.8)]
+		test = self.dataset[int(division*0.8):]
+
+		model = SARIMAX(trainning['AQI'],order=(6,0,1),seasonal_order=(0,0,1,7))
+		result = model.fit()
+		result.summary()
+		result.fittedvalues
+
+		# Obtain predicted values
+		start=len(trainning)
+		end=len(trainning)+len(test)-1
+		#dynamic = False means that ever point is generate by using the whole historic util the point
+		#typ = 'levels' to predict the original variables. If it was typ = 'linear' woud be a linear prediction in diferencial variable.
+		prediction = result.predict(start=start, end=end, dynamic=False, typ='levels').rename('Prediction SARIMA(6,0,1)(0,0,1,7) ')
+		prediction.index = test.index
+
 	#salve the dataframe into a csv
 	def saveData(self, file_name):
 		self.dataset.to_csv(file_name, index=False)
@@ -150,5 +231,7 @@ if __name__ == "__main__":
 	#a.seasonalDecompose()
 	#a.plotTimeSeries()
 	#a.correlogram()
-	a.arima()
+	#a.arma()
+	#a.arima()
+	a.sarima()
 
