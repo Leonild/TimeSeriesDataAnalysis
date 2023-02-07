@@ -22,6 +22,7 @@ class Agregation:
 
 	def __init__(self, dataset):
 		self.dataset = dataset
+		self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
 
 	#fill w field, identify what data belongs to the specific polygon
 	def geopointWithinShape(self, grid):
