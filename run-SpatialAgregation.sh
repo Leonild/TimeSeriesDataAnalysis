@@ -11,6 +11,6 @@ do
 	do
 		path=$1
 		echo Agregating data "for $path/$j""km/$i.csv"
-		python3 SpatialAgregation.py $path $i
+		python3 SpatialAgregation.py $path/$j"km" $i
 	done
 done
