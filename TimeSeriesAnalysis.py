@@ -231,7 +231,7 @@ if __name__ == "__main__":
 	#a.seasonalDecompose()
 	#a.plotTimeSeries()
 	#a.correlogram()
-	#a.arma()
+	a.arma()
 	#a.arima()
-	a.sarima()
+	#a.sarima()
 

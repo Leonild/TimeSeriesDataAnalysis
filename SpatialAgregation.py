@@ -102,18 +102,20 @@ class Agregation:
 
 if __name__ == "__main__":
 	
-	path = sys.argv[1]
+	year = sys.argv[2]
+	originalPath = sys.argv[1]
+	path = originalPath + "/" + year + ".csv"
 	print('Stagint spatioal agregation for ', path)
 	#dataSet = pd.read_csv("./Los-Angeles/california-2019-O3.csv") #O3
 	dataSet = pd.read_csv(path) #O3
 	a = Agregation(dataSet)
 	
 	print('identificando dados nos poligonos')
-	pathPoligon = path + "/grid/hex-grid.shp"
+	pathPoligon = originalPath + "/grid/hex-grid.shp"
 	grid = gpd.read_file(pathPoligon)
 	a.geopointWithinShape(grid)
 	print('Agrupando por poligono e salvando')
 	a.groupByPolygon()
 	# print('salvando arquivo')
-	pathTo = path + "final-file.csv"
+	pathTo = originalPath + "/" + year + "-final-file.csv"
 	a.saveData(pathTo)
