@@ -21,8 +21,20 @@ import sys
 class Agregation:
 
 	def __init__(self, dataset):
-		self.dataset = dataset
-		self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
+		self.dataset = self.initialize(dataset)
+
+	# initialize the dataset by removing the undesire columns, assigning date to index, and grouping by month (commented)
+	def initialize(self, dataset):
+		#removing undesired columns
+		dataset = dataset.drop(['Source','Site ID','UNITS','POC','STATE','STATE_CODE','COUNTY_CODE','COUNTY','Daily Max 8-hour Ozone Concentration','Site Name','DAILY_OBS_COUNT','PERCENT_COMPLETE','AQS_PARAMETER_CODE','AQS_PARAMETER_DESC','CBSA_CODE','CBSA_NAME'],axis=1)
+		dataset = dataset.dropna() 
+		# Convert the date to datetime64
+		dataset['Date'] = pd.to_datetime(dataset['Date'], format='%m/%d/%Y')
+		dataset.index = dataset['Date'] # to work the next line
+		#grouping by month
+		dataset = dataset.groupby(pd.Grouper(freq='M')).mean() #grouping data by month
+		dataset = dataset.rename(columns={"Date": "Date", "DAILY_AQI_VALUE": "AQI", "SITE_LATITUDE": "latitude", "SITE_LONGITUDE": "longitude"})
+		return dataset
 
 	#fill w field, identify what data belongs to the specific polygon
 	def geopointWithinShape(self, grid):
