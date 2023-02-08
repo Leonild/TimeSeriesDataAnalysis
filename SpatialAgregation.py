@@ -58,7 +58,8 @@ class Agregation:
 							# cities.ix[index, 'w'] = i #atribuindo o id do arranjo
 							isNotInto = False
 							row['w'] = i
-							aux = aux.append(cities.ix[index])
+							#aux = aux.append(cities.ix[index]) # ix is deprecated
+							aux = aux.append(cities.inloc[index])
 							#print(pt, " está no poligono ", i)
 					# if not data into plygon appending a row
 					if(isNotInto):
@@ -79,7 +80,8 @@ class Agregation:
 						#cities.ix[index, 'w'] = i #atribuindo o id do arranjo
 						row['w'] = i
 						isNotInto = False
-						aux = aux.append(cities.ix[index])
+						#aux = aux.append(cities.ix[index]) # ix is deprecated
+						aux = aux.append(cities.inloc[index])
 						# print(pt, " está no poligono ", i)
 				# if not data into plygon appending a row
 				if(isNotInto):
