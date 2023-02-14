@@ -81,7 +81,8 @@ class Agregation:
 						row['w'] = i
 						isNotInto = False
 						#aux = aux.append(cities.ix[index]) # ix is deprecated
-						aux = aux.append(cities.iloc[index])
+						#aux = aux.append(cities.iloc[index]) #The frame.append method is deprecat
+						aux = aux.concat(cities.iloc[index])
 						# print(pt, " está no poligono ", i)
 				# if not data into plygon appending a row
 				if(isNotInto):
@@ -89,9 +90,11 @@ class Agregation:
 					##row_contents = pd.DataFrame({'w': [i], 'Address': ['0'], 'DateLocalCount': 0.0, 'longitude': 0.0, 'latitude': 0.0,
 					#	'NO2AQI': 0.0, 'O3AQI': 0.0, 'SO2AQI': 0.0, 'COAQI': 0.0})
 					row_contents = pd.DataFrame({'w': [i], 'latitude': np.nan, 'longitude': np.nan,'AQI': np.nan})
-					cities = cities.append(row_contents, ignore_index=True)
+					#cities = cities.append(row_contents, ignore_index=True) #The frame.append method is deprecat
+					cities = cities.concat(row_contents, ignore_index=True)
 					#append_list_as_row('./pre-final-file.csv', row_contents)
-					aux = aux.append(row_contents)
+					#aux = aux.append(row_contents) #The frame.append method is deprecat
+					aux = aux.concat(row_contents)
 
 			else:
 				print("Nao identificado")
