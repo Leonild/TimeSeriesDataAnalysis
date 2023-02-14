@@ -129,7 +129,7 @@ if __name__ == "__main__":
 	a = Agregation(dataSet)
 	
 	print('identificando dados nos poligonos')
-	pathPoligon = originalPath + "/grid/hex-grid.shp"
+	pathPoligon = originalPath + "/hex-grid.shp"
 	grid = gpd.read_file(pathPoligon)
 	a.geopointWithinShape(grid)
 	print('Agrupando por poligono e salvando')
