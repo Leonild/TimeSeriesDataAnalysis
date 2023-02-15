@@ -22,6 +22,8 @@ class Agregation:
 
 	def __init__(self, dataset):
 		self.dataset = self.initialize(dataset)
+		print(self.dataset.head())
+		#exit()
 
 	# initialize the dataset by removing the undesire columns, assigning date to index, and grouping by month (commented)
 	def initialize(self, dataset):
@@ -30,10 +32,11 @@ class Agregation:
 		dataset = dataset.dropna() 
 		# Convert the date to datetime64
 		dataset['Date'] = pd.to_datetime(dataset['Date'], format='%m/%d/%Y')
-		dataset.index = dataset['Date'] # to work the next line
+		#dataset.index = dataset['Date'] # to work the next line
 		#grouping by month
-		dataset = dataset.groupby(pd.Grouper(freq='M')).mean() #grouping data by month
+		#dataset = dataset.groupby(pd.Grouper(freq='M')).mean() #grouping data by month
 		dataset = dataset.rename(columns={"Date": "Date", "DAILY_AQI_VALUE": "AQI", "SITE_LATITUDE": "latitude", "SITE_LONGITUDE": "longitude"})
+		dataset.insert(loc=0, column='w', value=np.nan)
 		return dataset
 
 	#fill w field, identify what data belongs to the specific polygon
@@ -54,14 +57,15 @@ class Agregation:
 					poly = shape(poly)
 					for index, row in cities.iterrows():
 						pt = Point((row['longitude'], row['latitude']))
+						#print("Lendo poligono: ", poly)
 						if pt.within(poly):
-							# cities.ix[index, 'w'] = i #atribuindo o id do arranjo
+							cities.at[index, 'w'] = i #atribuindo o id do arranjo
 							isNotInto = False
-							row['w'] = i
+							#row['w'] = i
 							#aux = aux.append(cities.ix[index]) # ix is deprecated
 							#aux = aux.append(cities.iloc[index]) #The frame.append method is deprecat
-							aux = pd.concat([aux,cities.iloc[index]])
-							#print(pt, " está no poligono ", i)
+							#aux = pd.concat([aux,cities.iloc[index]])#,axis=1)
+							print(pt, " está no poligono ", i)
 					# if not data into plygon appending a row
 					if(isNotInto):
 						# Appending a row to csv with missing entries
@@ -69,9 +73,9 @@ class Agregation:
 						#'NO2AQI': 0.0, 'O3AQI': 0.0, 'SO2AQI': 0.0, 'COAQI': 0.0})
 						row_contents = pd.DataFrame({'w': [i], 'Date': np.nan,'AQI': np.nan, 'latitude': np.nan, 'longitude': np.nan})
 						#cities = cities.append(row_contents, ignore_index=True) #The frame.append method is deprecat
-						cities = pd.concat([cities,row_contents], ignore_index=True)
+						cities = pd.concat([cities,row_contents])#, axis=1)
 						#aux = aux.append(row_contents) #The frame.append method is deprecat
-						aux = pd.concat([aux,row_contents])
+						#aux = pd.concat([aux,row_contents], ignore_index=True, sort=False)
 						print("Adicionou a linha ", i)
 					i+=1
 
@@ -79,14 +83,15 @@ class Agregation:
 				poly = shape(multi)
 				for index, row in cities.iterrows():
 					pt = Point((row['longitude'], row['latitude']))
+					#print("Lendo poligono: ", poly)
 					if pt.within(poly):
-						#cities.ix[index, 'w'] = i #atribuindo o id do arranjo
-						row['w'] = i
+						cities.at[index, 'w'] = i #atribuindo o id do arranjo
+						#row['w'] = i
 						isNotInto = False
 						#aux = aux.append(cities.ix[index]) # ix is deprecated
 						#aux = aux.append(cities.iloc[index]) #The frame.append method is deprecat
-						aux = pd.concat([aux,cities.iloc[index]])
-						# print(pt, " está no poligono ", i)
+						#aux = pd.concat([aux,cities.iloc[index]])#, axis=1)
+						print(pt, " está no poligono ", i)
 				# if not data into plygon appending a row
 				if(isNotInto):
 					# Appending a row to csv with missing entries
@@ -94,10 +99,10 @@ class Agregation:
 					#	'NO2AQI': 0.0, 'O3AQI': 0.0, 'SO2AQI': 0.0, 'COAQI': 0.0})
 					row_contents = pd.DataFrame({'w': [i], 'latitude': np.nan, 'longitude': np.nan,'AQI': np.nan})
 					#cities = cities.append(row_contents, ignore_index=True) #The frame.append method is deprecat
-					cities = pd.concat([cities,row_contents], ignore_index=True)
+					cities = pd.concat([cities,row_contents], ignore_index=True, sort=False)
 					#append_list_as_row('./pre-final-file.csv', row_contents)
 					#aux = aux.append(row_contents) #The frame.append method is deprecat
-					aux = pd.concat([aux,row_contents])
+					#aux = pd.concat([aux,row_contents])#, axis=1)
 
 			else:
 				print("Nao identificado")
@@ -106,8 +111,8 @@ class Agregation:
 			
 		# aux.to_csv('./new-final-file.csv', index=False)
 		#print(aux)
-		self.dataset = aux.reset_index()
-		return aux
+		self.dataset = cities.reset_index()#aux.reset_index()
+		return cities#aux
 
 	#grouping and save data by data location inside a polygon. This method will return the final file for the Autocorrelatin
 	def groupByPolygon(self):
@@ -136,7 +141,7 @@ if __name__ == "__main__":
 	grid = gpd.read_file(pathPoligon)
 	a.geopointWithinShape(grid)
 	print('Agrupando por poligono e salvando')
-	a.groupByPolygon()
+	#a.groupByPolygon()
 	# print('salvando arquivo')
 	pathTo = originalPath + "/" + year + "-final-file.csv"
 	a.saveData(pathTo)
