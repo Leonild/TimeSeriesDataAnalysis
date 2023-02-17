@@ -52,33 +52,36 @@ class Agregation:
 		for multi in shapes['geometry']:
 			# checar se eh POLYGON ou MULTIPOLYGON
 			if multi.geom_type == 'MultiPolygon':
-				for poly in multi:
-					isNotInto = True
-					poly = shape(poly)
-					for index, row in cities.iterrows():
-						pt = Point((row['longitude'], row['latitude']))
-						#print("Lendo poligono: ", poly)
-						if pt.within(poly):
-							cities.at[index, 'w'] = i #atribuindo o id do arranjo
-							isNotInto = False
-							#row['w'] = i
-							#aux = aux.append(cities.ix[index]) # ix is deprecated
-							#aux = aux.append(cities.iloc[index]) #The frame.append method is deprecat
-							#aux = pd.concat([aux,cities.iloc[index]])#,axis=1)
-							print(pt, " está no poligono ", i)
-					# if not data into plygon appending a row
-					if(isNotInto):
-						# Appending a row to csv with missing entries
-						#row_contents = pd.DataFrame({'w': [i], 'Address': ['0'], 'DateLocalCount': 0.0, 'longitude': 0.0, 'latitude': 0.0,
-						#'NO2AQI': 0.0, 'O3AQI': 0.0, 'SO2AQI': 0.0, 'COAQI': 0.0})
-						row_contents = pd.DataFrame({'w': [i], 'Date': np.nan,'AQI': np.nan, 'latitude': np.nan, 'longitude': np.nan})
-						#cities = cities.append(row_contents, ignore_index=True) #The frame.append method is deprecat
-						cities = pd.concat([cities,row_contents])#, axis=1)
-						#aux = aux.append(row_contents) #The frame.append method is deprecat
-						#aux = pd.concat([aux,row_contents], ignore_index=True, sort=False)
-						print("Adicionou a linha ", i)
+				try:
+					for poly in multi:
+						isNotInto = True
+						poly = shape(poly)
+						for index, row in cities.iterrows():
+							pt = Point((row['longitude'], row['latitude']))
+							#print("Lendo poligono: ", poly)
+							if pt.within(poly):
+								cities.at[index, 'w'] = i #atribuindo o id do arranjo
+								isNotInto = False
+								#row['w'] = i
+								#aux = aux.append(cities.ix[index]) # ix is deprecated
+								#aux = aux.append(cities.iloc[index]) #The frame.append method is deprecat
+								#aux = pd.concat([aux,cities.iloc[index]])#,axis=1)
+								print(pt, " está no poligono ", i)
+						# if not data into plygon appending a row
+						if(isNotInto):
+							# Appending a row to csv with missing entries
+							#row_contents = pd.DataFrame({'w': [i], 'Address': ['0'], 'DateLocalCount': 0.0, 'longitude': 0.0, 'latitude': 0.0,
+							#'NO2AQI': 0.0, 'O3AQI': 0.0, 'SO2AQI': 0.0, 'COAQI': 0.0})
+							row_contents = pd.DataFrame({'w': [i], 'Date': np.nan,'AQI': np.nan, 'latitude': np.nan, 'longitude': np.nan})
+							#cities = cities.append(row_contents, ignore_index=True) #The frame.append method is deprecat
+							cities = pd.concat([cities,row_contents])#, axis=1)
+							#aux = aux.append(row_contents) #The frame.append method is deprecat
+							#aux = pd.concat([aux,row_contents], ignore_index=True, sort=False)
+							print("Adicionou a linha ", i)
+						i+=1
+				except:
+					print("MultiPolygon ",i ,"object is not iterable")
 					i+=1
-
 			elif multi.geom_type == 'Polygon':
 				poly = shape(multi)
 				for index, row in cities.iterrows():
