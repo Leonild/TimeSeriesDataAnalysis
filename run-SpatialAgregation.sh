@@ -5,7 +5,7 @@ then
 	echo Type the data path.
 	exit 0
 fi
-for j in {50..100..10}
+for j in {100..400..100}
 do
 	for i in {2012..2022..1}
 	do

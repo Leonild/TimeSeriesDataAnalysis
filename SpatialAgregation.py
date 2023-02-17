@@ -117,9 +117,9 @@ class Agregation:
 	#grouping and save data by data location inside a polygon. This method will return the final file for the Autocorrelatin
 	def groupByPolygon(self):
 		grouped = self.dataset#[['w','AQI']]
-		#grouped = grouped.dropna(axis='rows')  # Delete rows with NAs
-		grouped = grouped.groupby(['w']).mean()#count()[['DateLocal']]  # testendo a funcao contar
-		# grouped.to_csv('final-file.csv')
+		grouped = grouped[grouped.w.notnull()]  # Delete rows with NAs
+		#grouped = grouped.groupby(['w']).mean()#count()[['DateLocal']]  # testendo a funcao contar
+		grouped = grouped.sort_values(by=['w'])
 		self.dataset = grouped.reset_index()
 
 	#salve the dataframe into a csv
@@ -141,7 +141,7 @@ if __name__ == "__main__":
 	grid = gpd.read_file(pathPoligon)
 	a.geopointWithinShape(grid)
 	print('Agrupando por poligono e salvando')
-	#a.groupByPolygon()
-	# print('salvando arquivo')
+	a.groupByPolygon()
+	print('salvando arquivo')
 	pathTo = originalPath + "/" + year + "-final-file.csv"
 	a.saveData(pathTo)
