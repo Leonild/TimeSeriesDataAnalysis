@@ -17,13 +17,18 @@ from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.statespace.tools import diff
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+import sys
 
 
 class Agregation:
 
-	def __init__(self):
+	def __init__(self, path, dataset, polygon):
 		#self.dataset = self.initialize(dataset)
-		self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
+		#self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
+		self.dataset = dataset
+		self.path = path
+		self.polygon = polygon
+		self.polygonData = {}
 
 	# ARMA (autoregression analysis and moving average)
 	def arma(self):
@@ -66,7 +71,10 @@ class Agregation:
 		prediction.plot(legend=True)
 		ax.autoscale(axis='x',tight=True)
 		ax.set(xlabel=xlabel, ylabel=ylabel)
-		plt.show()
+		#plt.show()
+		savePath = path + "/" + self.polygon + "-arma.png"
+		plt.savefig(savePath)
+		plt.clf()
 
 	# autoregressive integrated moving average (ARIMA)
 	def arima(self):
@@ -111,12 +119,15 @@ class Agregation:
 		trainning['AQI'].plot(legend=True, label='Trainning')
 		test['AQI'].plot(legend=True, label='Test')
 		prediction.plot(legend=True, figsize=(8,6))
-		plt.show()
+		#plt.show()
+		savePath = path + "/" + self.polygon + "-arima.png"
+		plt.savefig(savePath)
+		plt.clf()
 
 	# add others datasets
 	def appendDataset(self, dataset):
-		newDataset = self.initialize(dataset)
-		self.dataset = self.dataset.append(newDataset)
+		#newDataset = self.initialize(dataset)
+		self.dataset = self.dataset.append(dataset)
 		self.dataset = self.dataset.sort_index()
 
 	# initialize the dataset by removing the undesire columns, assigning date to index, and grouping by month (commented)
@@ -141,7 +152,10 @@ class Agregation:
 		lags = 10
 		#plot_acf(correlation,title=title,lags=lags)
 		sm.graphics.tsa.plot_pacf(correlation,title=title,lags=lags)
-		plt.show()
+		#plt.show()
+		savePath = path + "/" + self.polygon + "-correlogram.png"
+		plt.savefig(savePath)
+		plt.clf()
 
 	# plot data in a simple time series description
 	def plotTimeSeries(self):
@@ -159,6 +173,9 @@ class Agregation:
 		plt.ylim()
 		plt.show()
 		#plt.savefig("./"+graphName)
+		#plt.clf()
+		savePath = path + "/" + self.polygon + "-TimeSeries.png"
+		plt.savefig(savePath)
 		plt.clf()
 
 	#Arima with seasonality
@@ -206,7 +223,10 @@ class Agregation:
 		pollutant = np.array(self.dataset['AQI'])
 		result = seasonal_decompose(pollutant, model='additive', period=12)
 		result.plot()
-		pyplot.show()
+		#pyplot.show()
+		savePath = path + "/" + self.polygon + "-seasonalDecompose.png"
+		plt.savefig(savePath)
+		plt.clf()
 
 	# to split data set per season
 	def seasonFilter(self, df):	
@@ -216,22 +236,39 @@ class Agregation:
 		winter = df[(df['Date'] >= '2019-12-01')]# & (df['Date'] <= '2019-02-28')]
 		winter = winter.append(df[(df['Date'] <= '2019-02-28')])
 
+	# execute the time series analysis for the processing data by polygon
+	def execute(self):
+		#reading all the files for a specific spatial granularity
+		dir_list = os.listdir(self.path)
+		for file in dir_list:
+			readPath = path + '/' + file
+			print("Processing dataset ", readPath)
+			dataSet = pd.read_csv(readPath) #O3
+			self.appendDataset(dataSet)
+		#splitting data by polygon
+		groupedPolygonData = self.dataset.groupby(['w'])
+		for key, value in enumerate(groupedPolygonData):    
+			self.polygonData[key] = value # assigning data frame from list to key in dictionary
+			try:
+				executer = Agregation(path, value, key)
+				executer.plotTimeSeries()
+				executer.correlogram()
+				executer.seasonalDecompose()
+				executer.arma()
+				executer.arima()
+			except:
+				print("Erro to process polygon: ", key)
+
 if __name__ == "__main__":
 	
-	path = "/home/leonildo/Downloads/california-data-ozone"
-	a = Agregation()
-
-	dir_list = os.listdir(path)
-	for file in dir_list:
-		readPath = path + '/' + file
-		print("Processing dataset ", readPath)
-		dataSet = pd.read_csv(readPath) #O3
-		a.appendDataset(dataSet)
+	path = sys.argv[1] #"/home/leonildo/Downloads/california-data-ozone"
+	a = Agregation(path, pd.DataFrame(), 0)
+	a.execute()
 
 	#a.seasonalDecompose()
 	#a.plotTimeSeries()
 	#a.correlogram()
-	a.arma()
+	#a.arma()
 	#a.arima()
 	#a.sarima()
 
