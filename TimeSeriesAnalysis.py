@@ -25,7 +25,12 @@ class Agregation:
 	def __init__(self, path, dataset, polygon):
 		#self.dataset = self.initialize(dataset)
 		#self.dataset = pd.DataFrame(columns = ["Date", "AQI", "latitude","longitude"])
-		self.dataset = dataset
+		if not dataset.empty:
+			self.dataset = dataset.drop(['level_0','index'], axis=1)
+			self.dataset['Date'] = pd.to_datetime(self.dataset['Date'], format='%Y/%m/%d')
+			self.dataset.index = self.dataset['Date'] # to work plot the timeline
+		else:
+			self.dataset = dataset
 		self.path = path
 		self.polygon = polygon
 		self.polygonData = {}
@@ -72,7 +77,7 @@ class Agregation:
 		ax.autoscale(axis='x',tight=True)
 		ax.set(xlabel=xlabel, ylabel=ylabel)
 		#plt.show()
-		savePath = path + "/" + self.polygon + "-arma.png"
+		savePath = path + "/" + str(self.polygon) + "-arma.png"
 		plt.savefig(savePath)
 		plt.clf()
 
@@ -120,7 +125,7 @@ class Agregation:
 		test['AQI'].plot(legend=True, label='Test')
 		prediction.plot(legend=True, figsize=(8,6))
 		#plt.show()
-		savePath = path + "/" + self.polygon + "-arima.png"
+		savePath = path + "/" + str(self.polygon) + "-arima.png"
 		plt.savefig(savePath)
 		plt.clf()
 
@@ -153,7 +158,7 @@ class Agregation:
 		#plot_acf(correlation,title=title,lags=lags)
 		sm.graphics.tsa.plot_pacf(correlation,title=title,lags=lags)
 		#plt.show()
-		savePath = path + "/" + self.polygon + "-correlogram.png"
+		savePath = path + "/" + str(self.polygon) + "-correlogram.png"
 		plt.savefig(savePath)
 		plt.clf()
 
@@ -174,7 +179,7 @@ class Agregation:
 		plt.show()
 		#plt.savefig("./"+graphName)
 		#plt.clf()
-		savePath = path + "/" + self.polygon + "-TimeSeries.png"
+		savePath = path + "/" + str(self.polygon) + "-TimeSeries.png"
 		plt.savefig(savePath)
 		plt.clf()
 
@@ -224,7 +229,7 @@ class Agregation:
 		result = seasonal_decompose(pollutant, model='additive', period=12)
 		result.plot()
 		#pyplot.show()
-		savePath = path + "/" + self.polygon + "-seasonalDecompose.png"
+		savePath = path + "/" + str(self.polygon) + "-seasonalDecompose.png"
 		plt.savefig(savePath)
 		plt.clf()
 
@@ -248,16 +253,18 @@ class Agregation:
 		#splitting data by polygon
 		groupedPolygonData = self.dataset.groupby(['w'])
 		for key, value in enumerate(groupedPolygonData):    
-			self.polygonData[key] = value # assigning data frame from list to key in dictionary
-			try:
-				executer = Agregation(path, value, key)
+			newData = groupedPolygonData.get_group((key+1))
+                        #self.polygonData[key] = value # assigning data frame from list to key in dictionary
+#			print(newData)
+                        try:#if(key==79):
+				executer = Agregation(path, newData, key+1)
 				executer.plotTimeSeries()
 				executer.correlogram()
 				executer.seasonalDecompose()
 				executer.arma()
 				executer.arima()
 			except:
-				print("Erro to process polygon: ", key)
+				print("Erro to process polygon: ", key+1)
 
 if __name__ == "__main__":
 	
