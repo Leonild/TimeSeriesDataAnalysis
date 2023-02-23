@@ -253,9 +253,9 @@ class Agregation:
 		#splitting data by polygon
 		groupedPolygonData = self.dataset.groupby(['w'])
 		for key, value in enumerate(groupedPolygonData):    
-			newData = groupedPolygonData.get_group((key+1))
             #self.polygonData[key] = value # assigning data frame from list to key in dictionary
 			try: #if(key==79):
+				newData = groupedPolygonData.get_group((key+1))
 				executer = Agregation(path, newData, key+1)
 				executer.plotTimeSeries()
 				executer.correlogram()
